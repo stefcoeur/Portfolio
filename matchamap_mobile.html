@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>matchamap — mobile</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f7e6;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 32px 16px 48px;
+}
+
+.phone { width: 375px; background: #111; border-radius: 50px; padding: 14px; border: 2px solid #1e1e1e; box-shadow: 0 24px 80px rgba(0,0,0,0.35); }
+.screen { background: #f7faf3; border-radius: 38px; overflow: hidden; height: 720px; display: flex; flex-direction: column; position: relative; }
+
+.status-bar { background: #f7faf3; padding: 12px 22px 0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.notch { width: 100px; height: 28px; background: #111; border-radius: 0 0 18px 18px; margin: 0 auto; }
+.status-time { font-size: 12px; font-weight: 600; color: #27500A; }
+.status-icons { display: flex; gap: 5px; align-items: center; }
+
+.app-header { padding: 10px 20px 8px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.logo-row { display: flex; align-items: center; gap: 8px; }
+.wordmark { font-size: 22px; font-weight: 700; color: #27500A; }
+.wordmark span { color: #3B6D11; }
+.header-right { display: flex; gap: 8px; }
+.icon-btn { width: 34px; height: 34px; border-radius: 999px; background: #fff; border: 2px solid #C0DD97; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+.search-pill { margin: 0 18px 10px; background: #fff; border-radius: 999px; border: 2px solid #C0DD97; padding: 9px 16px; display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.search-pill input { flex: 1; border: none; outline: none; font-size: 14px; background: transparent; color: #27500A; }
+.search-pill input::placeholder { color: #97C459; }
+
+.map-container { flex: 1; position: relative; overflow: hidden; }
+.map-container svg { width: 100%; height: 100%; }
+.map-tooltip { position: absolute; background: #fff; border: 2px solid #C0DD97; border-radius: 16px; padding: 10px 14px; min-width: 160px; pointer-events: none; display: none; z-index: 10; }
+.map-tooltip.show { display: block; }
+.tip-name { font-size: 13px; font-weight: 600; color: #27500A; }
+.tip-type { font-size: 11px; color: #97C459; margin-top: 2px; }
+.tip-rating { font-size: 12px; color: #3B6D11; font-weight: 600; margin-top: 4px; }
+
+.bottom-sheet { background: #fff; border-radius: 24px 24px 0 0; border-top: 2px solid #EAF3DE; flex-shrink: 0; }
+.handle-wrap { padding: 10px 0 0; display: flex; justify-content: center; cursor: pointer; }
+.handle { width: 38px; height: 4px; background: #C0DD97; border-radius: 999px; }
+.sheet-tabs { display: flex; gap: 8px; padding: 10px 18px 8px; overflow-x: auto; }
+.sheet-tabs::-webkit-scrollbar { display: none; }
+.sheet-tab { font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 999px; border: 2px solid #C0DD97; background: #fff; color: #639922; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
+.sheet-tab.active { background: #3B6D11; color: #EAF3DE; border-color: #3B6D11; }
+.sheet-content { padding: 4px 18px 10px; overflow-y: auto; max-height: 240px; }
+.sheet-content::-webkit-scrollbar { display: none; }
+
+.cafe-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #EAF3DE; }
+.cafe-row:last-child { border-bottom: none; }
+.bowl-icon { width: 38px; height: 38px; border-radius: 999px; background: #EAF3DE; border: 1.5px solid #C0DD97; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cafe-info { flex: 1; min-width: 0; }
+.cafe-name { font-size: 13px; font-weight: 600; color: #27500A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cafe-meta { font-size: 11px; color: #97C459; margin-top: 2px; }
+.cafe-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+.cafe-tag { font-size: 10px; background: #f7faf3; color: #639922; border: 1px solid #C0DD97; padding: 2px 8px; border-radius: 999px; }
+.cafe-right { text-align: right; flex-shrink: 0; }
+.cafe-rating { background: #3B6D11; color: #EAF3DE; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+.cafe-dist { font-size: 10px; color: #97C459; margin-top: 4px; }
+
+.rank-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EAF3DE; }
+.rank-row:last-child { border-bottom: none; }
+.rank-num { font-size: 18px; font-weight: 600; color: #C0DD97; width: 30px; text-align: center; flex-shrink: 0; }
+.rank-num.top { color: #BA7517; }
+.rank-info { flex: 1; min-width: 0; }
+.rank-name { font-size: 13px; font-weight: 600; color: #27500A; }
+.rank-sub { font-size: 11px; color: #97C459; margin-top: 2px; }
+.rank-bar { height: 3px; background: #EAF3DE; border-radius: 999px; margin-top: 5px; overflow: hidden; }
+.rank-bar-fill { height: 100%; background: #3B6D11; border-radius: 999px; }
+.rank-score { font-size: 18px; font-weight: 600; color: #3B6D11; flex-shrink: 0; }
+
+.profile-wrap { padding: 4px 0 8px; }
+.profile-card { background: #f7faf3; border: 2px solid #C0DD97; border-radius: 18px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+.avatar { width: 46px; height: 46px; border-radius: 999px; background: #EAF3DE; border: 2px solid #C0DD97; display: flex; align-items: center; justify-content: center; }
+.profile-name { font-size: 14px; font-weight: 600; color: #27500A; }
+.profile-sub { font-size: 12px; color: #97C459; margin-top: 2px; }
+.profile-stats { display: flex; gap: 8px; margin-bottom: 10px; }
+.stat-box { flex: 1; background: #f7faf3; border: 2px solid #C0DD97; border-radius: 14px; padding: 10px; text-align: center; }
+.stat-num { font-size: 20px; font-weight: 600; color: #3B6D11; }
+.stat-label { font-size: 10px; color: #97C459; margin-top: 2px; }
+.review-btn { width: 100%; padding: 12px; background: #3B6D11; border: none; border-radius: 999px; color: #EAF3DE; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.review-btn:hover { background: #27500A; }
+
+.tab-bar { display: flex; background: #fff; border-top: 1.5px solid #EAF3DE; padding: 8px 0 16px; flex-shrink: 0; }
+.tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; transition: opacity 0.15s; }
+.tab-item:hover { opacity: 0.75; }
+.tab-item svg { width: 22px; height: 22px; }
+.tab-label { font-size: 10px; color: #C0DD97; transition: color 0.15s; }
+.tab-item.active .tab-label { color: #3B6D11; font-weight: 600; }
+
+/* Review flow */
+.review-screen { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.nav-bar { padding: 10px 18px 6px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.back-btn { width: 32px; height: 32px; border-radius: 999px; background: #fff; border: 2px solid #C0DD97; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.nav-title { font-size: 17px; font-weight: 600; color: #27500A; }
+.step-dots { display: flex; gap: 6px; padding: 0 18px 10px; flex-shrink: 0; }
+.step-dot { height: 4px; border-radius: 999px; transition: all 0.2s; }
+.step-dot.done { background: #97C459; flex: 1; }
+.step-dot.active { background: #3B6D11; flex: 2; }
+.step-dot.upcoming { background: #EAF3DE; flex: 1; }
+.review-scroll { flex: 1; overflow-y: auto; padding: 0 18px 16px; }
+.review-scroll::-webkit-scrollbar { display: none; }
+.section-lbl { font-size: 11px; font-weight: 600; color: #97C459; margin-bottom: 8px; }
+.cafe-option { display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid #C0DD97; border-radius: 16px; padding: 11px 14px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+.cafe-option.selected { border-color: #3B6D11; background: #f7faf3; }
+.cafe-option-name { font-size: 13px; font-weight: 600; color: #27500A; }
+.cafe-option-meta { font-size: 11px; color: #97C459; margin-top: 2px; }
+.check-circle { width: 20px; height: 20px; border-radius: 999px; border: 2px solid #C0DD97; margin-left: auto; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.check-circle.checked { background: #3B6D11; border-color: #3B6D11; }
+.drink-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.drink-chip { font-size: 12px; font-weight: 500; padding: 7px 14px; border-radius: 999px; border: 2px solid #C0DD97; background: #fff; color: #639922; cursor: pointer; transition: all 0.15s; }
+.drink-chip.selected { background: #3B6D11; color: #EAF3DE; border-color: #3B6D11; }
+.star-row { display: flex; gap: 8px; margin-bottom: 5px; }
+.star { cursor: pointer; transition: transform 0.1s; }
+.star:hover { transform: scale(1.15); }
+.rating-lbl { font-size: 12px; color: #3B6D11; font-weight: 600; margin-bottom: 14px; min-height: 18px; }
+.cat-section { margin-bottom: 14px; }
+.cat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.cat-lbl { font-size: 12px; color: #27500A; width: 90px; flex-shrink: 0; }
+.mini-stars { display: flex; gap: 4px; }
+.review-ta { width: 100%; background: #fff; border: 2px solid #C0DD97; border-radius: 16px; padding: 12px 14px; font-size: 13px; color: #27500A; font-family: inherit; resize: none; outline: none; line-height: 1.5; margin-bottom: 4px; }
+.review-ta:focus { border-color: #97C459; }
+.review-ta::placeholder { color: #C0DD97; }
+.char-count { font-size: 11px; color: #C0DD97; text-align: right; margin-bottom: 12px; }
+.tag-grid { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.tag-chip { font-size: 11px; font-weight: 500; padding: 6px 12px; border-radius: 999px; border: 1.5px solid #C0DD97; background: #fff; color: #639922; cursor: pointer; transition: all 0.15s; }
+.tag-chip.selected { background: #EAF3DE; border-color: #3B6D11; color: #27500A; }
+.next-btn { width: 100%; padding: 13px; background: #3B6D11; border: none; border-radius: 999px; color: #EAF3DE; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.next-btn:disabled { background: #C0DD97; cursor: default; }
+.next-btn:hover:not(:disabled) { background: #27500A; }
+.success-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1.5rem 1.5rem 1rem; flex: 1; justify-content: center; }
+.success-bowl { width: 76px; height: 76px; background: #EAF3DE; border-radius: 999px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; border: 2px solid #C0DD97; }
+.success-title { font-size: 22px; font-weight: 700; color: #27500A; margin-bottom: 8px; }
+.success-sub { font-size: 13px; color: #97C459; line-height: 1.6; margin-bottom: 20px; }
+.success-card { background: #fff; border: 2px solid #C0DD97; border-radius: 20px; padding: 14px 16px; width: 100%; margin-bottom: 20px; text-align: left; }
+.done-btn { width: 100%; padding: 13px; background: #3B6D11; border: none; border-radius: 999px; color: #EAF3DE; font-size: 14px; font-weight: 600; cursor: pointer; }
+.done-btn:hover { background: #27500A; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="screen" id="mainScreen">
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="notch"></div>
+      <div class="status-icons">
+        <svg width="14" height="14" viewBox="0 0 13 13" fill="none"><rect x="1" y="5" width="2" height="7" rx="0.5" fill="#27500A"/><rect x="4.5" y="3" width="2" height="9" rx="0.5" fill="#27500A"/><rect x="8" y="1" width="2" height="11" rx="0.5" fill="#27500A"/></svg>
+        <svg width="14" height="14" viewBox="0 0 13 13" fill="none"><path d="M1 6 Q6.5 1 12 6" stroke="#27500A" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M3 8.5 Q6.5 5.5 10 8.5" stroke="#27500A" stroke-width="1.3" fill="none" stroke-linecap="round"/><circle cx="6.5" cy="11" r="1.2" fill="#27500A"/></svg>
+        <svg width="14" height="14" viewBox="0 0 13 13" fill="none"><rect x="1" y="4" width="8.5" height="5.5" rx="1.2" stroke="#27500A" stroke-width="1"/><rect x="10" y="5.5" width="1.8" height="2.5" rx="0.6" fill="#27500A"/><rect x="2" y="5" width="5.5" height="3.5" rx="0.5" fill="#27500A"/></svg>
+      </div>
+    </div>
+    <div class="app-header">
+      <div class="logo-row">
+        <svg width="28" height="28" viewBox="0 0 64 64"><path d="M10 28 Q10 54 32 54 Q54 54 54 28 Z" fill="#3B6D11"/><ellipse cx="32" cy="28" rx="22" ry="6" fill="#97C459"/><ellipse cx="32" cy="28" rx="15" ry="4" fill="#C0DD97"/><ellipse cx="32" cy="55" rx="10" ry="3" fill="#3B6D11" opacity="0.2"/></svg>
+        <div class="wordmark">matcha<span>map</span></div>
+      </div>
+      <div class="header-right">
+        <div class="icon-btn"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="4" stroke="#3B6D11" stroke-width="1.5"/><line x1="10" y1="10" x2="14" y2="14" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        <div class="icon-btn"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="#3B6D11" stroke-width="1.3"/><path d="M2 14 Q2 10 8 10 Q14 10 14 14" stroke="#3B6D11" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+    </div>
+    <div class="search-pill">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="4" stroke="#97C459" stroke-width="1.5"/><line x1="10" y1="10" x2="14" y2="14" stroke="#97C459" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input type="text" placeholder="Search city or area..." value="Toronto, ON"/>
+    </div>
+    <div class="map-container" id="mapContainer">
+      <svg id="mapSvg" width="100%" height="100%" viewBox="0 0 375 360" preserveAspectRatio="xMidYMid slice">
+        <rect width="375" height="360" fill="#e8f4df"/>
+        <line x1="0" y1="90" x2="375" y2="90" stroke="#C0DD97" stroke-width="0.8"/>
+        <line x1="0" y1="180" x2="375" y2="180" stroke="#C0DD97" stroke-width="0.8"/>
+        <line x1="0" y1="270" x2="375" y2="270" stroke="#C0DD97" stroke-width="0.8"/>
+        <line x1="94" y1="0" x2="94" y2="360" stroke="#C0DD97" stroke-width="0.8"/>
+        <line x1="188" y1="0" x2="188" y2="360" stroke="#C0DD97" stroke-width="0.8"/>
+        <line x1="282" y1="0" x2="282" y2="360" stroke="#C0DD97" stroke-width="0.8"/>
+        <rect x="0" y="81" width="375" height="18" fill="#d0e8bc" opacity="0.8"/>
+        <rect x="0" y="261" width="375" height="16" fill="#d0e8bc" opacity="0.8"/>
+        <rect x="82" y="0" width="16" height="360" fill="#d0e8bc" opacity="0.8"/>
+        <rect x="272" y="0" width="16" height="360" fill="#d0e8bc" opacity="0.8"/>
+        <rect x="8" y="8" width="66" height="66" rx="5" fill="#c5dda3" opacity="0.5"/>
+        <rect x="106" y="8" width="156" height="66" rx="5" fill="#c5dda3" opacity="0.5"/>
+        <rect x="296" y="8" width="72" height="66" rx="5" fill="#c5dda3" opacity="0.5"/>
+        <rect x="8" y="106" width="66" height="148" rx="5" fill="#c5dda3" opacity="0.5"/>
+        <rect x="106" y="106" width="156" height="60" rx="5" fill="#c5dda3" opacity="0.5"/>
+        <rect x="296" y="106" width="72" height="148" rx="5" fill="#c5dda3" opacity="0.5"/>
+        <rect x="106" y="196" width="156" height="58" rx="5" fill="#c5dda3" opacity="0.5"/>
+        <rect x="8" y="284" width="66" height="68" rx="5" fill="#c5dda3" opacity="0.5"/>
+        <rect x="106" y="284" width="156" height="68" rx="5" fill="#c5dda3" opacity="0.5"/>
+        <rect x="296" y="284" width="72" height="68" rx="5" fill="#c5dda3" opacity="0.5"/>
+      </svg>
+      <div id="mapPins"></div>
+      <div class="map-tooltip" id="mapTip"></div>
+    </div>
+    <div class="bottom-sheet" id="bottomSheet">
+      <div class="handle-wrap"><div class="handle"></div></div>
+      <div class="sheet-tabs" id="sheetTabs">
+        <div class="sheet-tab active" onclick="switchSheet('nearby',this)">Nearby</div>
+        <div class="sheet-tab" onclick="switchSheet('rankings',this)">Rankings</div>
+        <div class="sheet-tab" onclick="switchSheet('profile',this)">Profile</div>
+      </div>
+      <div class="sheet-content" id="sheetContent"></div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab-item active" id="maintab-map" onclick="switchMainTab('map')">
+        <svg viewBox="0 0 22 22" fill="none"><rect x="2" y="4" width="8" height="10" rx="1.5" stroke="#3B6D11" stroke-width="1.5"/><rect x="12" y="8" width="8" height="10" rx="1.5" stroke="#3B6D11" stroke-width="1.5"/></svg>
+        <span class="tab-label" style="color:#3B6D11;">Map</span>
+      </div>
+      <div class="tab-item" id="maintab-list" onclick="switchMainTab('list')">
+        <svg viewBox="0 0 22 22" fill="none"><line x1="4" y1="7" x2="18" y2="7" stroke="#C0DD97" stroke-width="1.5" stroke-linecap="round"/><line x1="4" y1="11" x2="18" y2="11" stroke="#C0DD97" stroke-width="1.5" stroke-linecap="round"/><line x1="4" y1="15" x2="13" y2="15" stroke="#C0DD97" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span class="tab-label">List</span>
+      </div>
+      <div class="tab-item" id="maintab-rank" onclick="switchMainTab('rank')">
+        <svg viewBox="0 0 22 22" fill="none"><polygon points="11,2 13.5,8 20,8.5 15,13 17,19.5 11,16 5,19.5 7,13 2,8.5 8.5,8" stroke="#C0DD97" stroke-width="1.4" fill="none"/></svg>
+        <span class="tab-label">Rankings</span>
+      </div>
+      <div class="tab-item" id="maintab-profile" onclick="switchMainTab('profile')">
+        <svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="4" stroke="#C0DD97" stroke-width="1.5"/><path d="M3 20 Q3 14 11 14 Q19 14 19 20" stroke="#C0DD97" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+        <span class="tab-label">Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cafes = [
+  { id:0, name:"Cha-An Toronto", type:"Japanese tea house", rating:4.8, google:4.7, appRating:4.9, votes:142, distance:"0.3 km", price:"$$", drinks:["ceremonial","matcha latte","cold brew matcha"], px:25, py:28 },
+  { id:1, name:"Nami Japanese", type:"Café & restaurant", rating:4.6, google:4.5, appRating:4.7, votes:98, distance:"0.8 km", price:"$$", drinks:["matcha latte","iced matcha","matcha cake"], px:55, py:52 },
+  { id:2, name:"Kissa Tanto", type:"Japanese-French café", rating:4.7, google:4.8, appRating:4.6, votes:211, distance:"1.1 km", price:"$$$", drinks:["ceremonial","matcha tiramisu","iced hojicha"], px:80, py:24 },
+  { id:3, name:"Hoji Café", type:"Specialty tea café", rating:4.5, google:4.4, appRating:4.6, votes:76, distance:"1.4 km", price:"$", drinks:["iced matcha","matcha lemonade","soft serve"], px:40, py:74 },
+  { id:4, name:"Umami Mart Café", type:"Japanese grocery & café", rating:4.4, google:4.3, appRating:4.5, votes:54, distance:"1.9 km", price:"$", drinks:["matcha latte","matcha mochi","ceremonial"], px:75, py:70 },
+];
+
+const reviewTags = ["Worth the wait","Great vibe","Good value","Authentic taste","Top-tier matcha","Instagrammable","Cozy spot","Friendly staff","Hidden gem","Smooth texture"];
+const ratingLabels = ["","Disappointing","Needs work","Pretty good","Really good","Exceptional"];
+
+let activePin = null;
+let activeMainTab = 'map';
+let reviewState = { step: 0, cafeId: null, drink: null, overall: 0, cats: {quality:0,taste:0,value:0}, text: '', tags: [] };
+
+function bowl(s) {
+  return `<svg width="${s}" height="${s}" viewBox="0 0 64 64"><path d="M10 28 Q10 54 32 54 Q54 54 54 28 Z" fill="#3B6D11"/><ellipse cx="32" cy="28" rx="22" ry="6" fill="#97C459"/><ellipse cx="32" cy="28" rx="15" ry="4" fill="#C0DD97"/></svg>`;
+}
+function star(filled, s) {
+  const f = filled ? '#3B6D11' : '#EAF3DE', st = filled ? '#3B6D11' : '#C0DD97';
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24"><polygon points="12,2 15.1,8.3 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.3" fill="${f}" stroke="${st}" stroke-width="1" stroke-linejoin="round"/></svg>`;
+}
+
+function renderPins() {
+  const c = document.getElementById('mapPins');
+  c.innerHTML = '';
+  cafes.forEach(cafe => {
+    const p = document.createElement('div');
+    p.style.cssText = `position:absolute;left:${cafe.px}%;top:${cafe.py}%;transform:translate(-50%,-50%);cursor:pointer;`;
+    const isActive = activePin === cafe.id;
+    p.innerHTML = `<div style="width:40px;height:40px;border-radius:50%;background:${isActive?'#EAF3DE':'#fff'};border:2.5px solid ${isActive?'#27500A':'#3B6D11'};display:flex;align-items:center;justify-content:center;transition:all 0.15s;">${bowl(20)}</div>`;
+    p.addEventListener('click', e => { e.stopPropagation(); togglePin(cafe.id); });
+    c.appendChild(p);
+  });
+}
+
+function togglePin(id) {
+  if (activePin === id) { activePin = null; renderPins(); document.getElementById('mapTip').classList.remove('show'); return; }
+  activePin = id;
+  renderPins();
+  const c = cafes[id];
+  const tip = document.getElementById('mapTip');
+  tip.innerHTML = `<div class="tip-name">${c.name}</div><div class="tip-type">${c.type}</div><div class="tip-rating">★ ${c.rating} · ${c.distance}</div>`;
+  const cont = document.getElementById('mapContainer');
+  const r = cont.getBoundingClientRect();
+  let left = (c.px/100)*r.width + 24;
+  let top = (c.py/100)*r.height - 80;
+  if (left + 170 > r.width) left = left - 195;
+  if (top < 4) top = (c.py/100)*r.height + 26;
+  tip.style.left = left+'px'; tip.style.top = top+'px';
+  tip.classList.add('show');
+}
+
+document.getElementById('mapContainer').addEventListener('click', () => { activePin=null; renderPins(); document.getElementById('mapTip').classList.remove('show'); });
+
+function nearbyHTML() {
+  return cafes.map(c => `<div class="cafe-row"><div class="bowl-icon">${bowl(18)}</div><div class="cafe-info"><div class="cafe-name">${c.name}</div><div class="cafe-meta">${c.distance} · ${c.price} · ${c.type}</div><div class="cafe-tags">${c.drinks.slice(0,2).map(d=>`<span class="cafe-tag">${d}</span>`).join('')}</div></div><div class="cafe-right"><div class="cafe-rating">★ ${c.rating}</div><div class="cafe-dist">Google ${c.google}</div></div></div>`).join('');
+}
+function rankingsHTML() {
+  return [...cafes].sort((a,b)=>b.appRating-a.appRating).map((c,i) => {
+    const score = ((c.google+c.appRating)/2).toFixed(1);
+    const pct = Math.round((score/5)*100);
+    return `<div class="rank-row"><div class="rank-num${i<3?' top':''}">#${i+1}</div><div class="rank-info"><div class="rank-name">${c.name}</div><div class="rank-sub">${c.votes} reviews</div><div class="rank-bar"><div class="rank-bar-fill" style="width:${pct}%"></div></div></div><div class="rank-score">${score}</div></div>`;
+  }).join('');
+}
+function profileHTML() {
+  return `<div class="profile-wrap"><div class="profile-card"><div class="avatar">${bowl(24)}</div><div><div class="profile-name">Matcha lover</div><div class="profile-sub">Toronto · joined 2024</div></div></div><div class="profile-stats"><div class="stat-box"><div class="stat-num">12</div><div class="stat-label">reviews</div></div><div class="stat-box"><div class="stat-num">5</div><div class="stat-label">saved</div></div><div class="stat-box"><div class="stat-num">3</div><div class="stat-label">cities</div></div></div><button class="review-btn" onclick="startReview()">+ write a review</button></div>`;
+}
+function listHTML() {
+  return cafes.map((c,i) => `<div class="cafe-row"><div class="bowl-icon">${bowl(18)}</div><div class="cafe-info"><div class="cafe-name">${c.name}</div><div class="cafe-meta">${c.distance} · ${c.price}</div><div class="cafe-tags">${c.drinks.slice(0,2).map(d=>`<span class="cafe-tag">${d}</span>`).join('')}</div></div><div class="cafe-right"><div class="cafe-rating">★ ${c.rating}</div></div></div>`).join('');
+}
+
+function switchSheet(tab, el) {
+  document.querySelectorAll('.sheet-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const content = document.getElementById('sheetContent');
+  if (tab==='nearby') content.innerHTML = nearbyHTML();
+  else if (tab==='rankings') content.innerHTML = rankingsHTML();
+  else if (tab==='profile') content.innerHTML = profileHTML();
+}
+
+function switchMainTab(tab) {
+  activeMainTab = tab;
+  ['map','list','rank','profile'].forEach(t => {
+    const el = document.getElementById('maintab-'+t);
+    el.classList.remove('active');
+    el.querySelector('.tab-label').style.color = '#C0DD97';
+    el.querySelector('.tab-label').style.fontWeight = '400';
+    el.querySelectorAll('svg *').forEach(s => { if(s.getAttribute('stroke')&&s.getAttribute('stroke')!=='none') s.setAttribute('stroke','#C0DD97'); });
+  });
+  const active = document.getElementById('maintab-'+tab);
+  active.classList.add('active');
+  active.querySelector('.tab-label').style.color = '#3B6D11';
+  active.querySelector('.tab-label').style.fontWeight = '600';
+  active.querySelectorAll('svg *').forEach(s => { if(s.getAttribute('stroke')&&s.getAttribute('stroke')!=='none') s.setAttribute('stroke','#3B6D11'); });
+
+  const sheet = document.getElementById('bottomSheet');
+  const tabs = document.getElementById('sheetTabs');
+  const content = document.getElementById('sheetContent');
+  tabs.style.display = tab==='map' ? 'flex' : 'none';
+  sheet.style.maxHeight = tab==='map' ? '' : '480px';
+  content.style.maxHeight = tab==='map' ? '240px' : '380px';
+  if (tab==='map') content.innerHTML = nearbyHTML();
+  else if (tab==='list') content.innerHTML = listHTML();
+  else if (tab==='rank') content.innerHTML = rankingsHTML();
+  else if (tab==='profile') content.innerHTML = profileHTML();
+}
+
+function startReview() {
+  reviewState = { step: 0, cafeId: null, drink: null, overall: 0, cats: {quality:0,taste:0,value:0}, text: '', tags: [] };
+  renderReview();
+}
+
+function renderReview() {
+  const screen = document.getElementById('mainScreen');
+  const existing = document.getElementById('reviewOverlay');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'reviewOverlay';
+  overlay.style.cssText = 'position:absolute;inset:0;background:#f7faf3;display:flex;flex-direction:column;z-index:100;border-radius:38px;overflow:hidden;';
+
+  const titles = ['Write a review','Rate your visit','Tell us more',''];
+  const stepHTML = reviewState.step < 3 ? `
+    <div class="status-bar" style="background:#f7faf3;">
+      <span class="status-time">9:41</span><div class="notch"></div>
+      <div class="status-icons"><svg width="14" height="14" viewBox="0 0 13 13" fill="none"><rect x="1" y="5" width="2" height="7" rx="0.5" fill="#27500A"/><rect x="4.5" y="3" width="2" height="9" rx="0.5" fill="#27500A"/><rect x="8" y="1" width="2" height="11" rx="0.5" fill="#27500A"/></svg></div>
+    </div>
+    <div class="nav-bar"><div class="back-btn" onclick="reviewBack()"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="#3B6D11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="nav-title">${titles[reviewState.step]}</div></div>
+    <div class="step-dots"><div class="step-dot ${reviewState.step>0?'done':'active'}"></div><div class="step-dot ${reviewState.step===1?'active':reviewState.step>1?'done':'upcoming'}"></div><div class="step-dot ${reviewState.step===2?'active':reviewState.step>2?'done':'upcoming'}"></div></div>
+    <div class="review-scroll">${reviewState.step===0?step0():reviewState.step===1?step1():step2()}</div>` : successHTML();
+
+  overlay.innerHTML = stepHTML;
+  screen.appendChild(overlay);
+  attachReviewEvents();
+}
+
+function step0() {
+  return `<div class="section-lbl">Choose a café</div>
+    ${cafes.map(c=>`<div class="cafe-option${reviewState.cafeId===c.id?' selected':''}" onclick="selectCafe(${c.id})"><div class="bowl-icon">${bowl(18)}</div><div><div class="cafe-option-name">${c.name}</div><div class="cafe-option-meta">${c.distance} · ${c.type}</div></div><div class="check-circle${reviewState.cafeId===c.id?' checked':''}">
+    ${reviewState.cafeId===c.id?`<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4 7.5L8 3" stroke="#EAF3DE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}</div></div>`).join('')}
+    <div style="margin-top:12px;" class="section-lbl">What did you order?</div>
+    <div class="drink-grid">${(reviewState.cafeId!==null?cafes[reviewState.cafeId].drinks:['ceremonial','matcha latte','iced matcha']).map(d=>`<div class="drink-chip${reviewState.drink===d?' selected':''}" onclick="selectDrink('${d}')">${d}</div>`).join('')}</div>
+    <button class="next-btn" ${reviewState.cafeId===null||!reviewState.drink?'disabled':''} onclick="reviewNext()">Continue</button>`;
+}
+
+function step1() {
+  const c = cafes[reviewState.cafeId];
+  return `<div style="background:#fff;border:2px solid #C0DD97;border-radius:16px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;"><div class="bowl-icon">${bowl(18)}</div><div><div style="font-size:13px;font-weight:600;color:#27500A;">${c.name}</div><div style="font-size:11px;color:#97C459;">${reviewState.drink}</div></div></div>
+  <div class="section-lbl">Overall rating</div>
+  <div class="star-row">${[1,2,3,4,5].map(i=>`<div class="star" onclick="setOverall(${i})">${star(i<=reviewState.overall,36)}</div>`).join('')}</div>
+  <div class="rating-lbl">${ratingLabels[reviewState.overall]||'tap to rate'}</div>
+  <div class="section-lbl">Rate by category</div>
+  <div class="cat-section">${[['quality','Matcha quality'],['taste','Taste'],['value','Value']].map(([k,lbl])=>`<div class="cat-row"><div class="cat-lbl">${lbl}</div><div class="mini-stars">${[1,2,3,4,5].map(i=>`<div onclick="setCat('${k}',${i})">${star(i<=reviewState.cats[k],20)}</div>`).join('')}</div></div>`).join('')}</div>
+  <button class="next-btn" ${reviewState.overall===0?'disabled':''} onclick="reviewNext()">Continue</button>`;
+}
+
+function step2() {
+  return `<div class="section-lbl">Your review</div>
+  <textarea class="review-ta" id="reviewTa" rows="5" maxlength="300" placeholder="How was the matcha? Describe the taste, texture, presentation...">${reviewState.text}</textarea>
+  <div class="char-count" id="charCount">${reviewState.text.length}/300</div>
+  <div class="section-lbl">Tags</div>
+  <div class="tag-grid">${reviewTags.map(t=>`<div class="tag-chip${reviewState.tags.includes(t)?' selected':''}" onclick="toggleTag('${t}')">${t}</div>`).join('')}</div>
+  <button class="next-btn" ${reviewState.text.length<10?'disabled':''} onclick="reviewNext()">Post review</button>`;
+}
+
+function successHTML() {
+  const c = cafes[reviewState.cafeId];
+  const stars = '★'.repeat(reviewState.overall)+'☆'.repeat(5-reviewState.overall);
+  return `<div class="status-bar" style="background:#f7faf3;"><span class="status-time">9:41</span><div class="notch"></div><div></div></div>
+  <div class="success-wrap"><div class="success-bowl">${bowl(40)}</div>
+  <div class="success-title">Review posted!</div>
+  <div class="success-sub">Thanks for helping the matcha community find their next favourite spot.</div>
+  <div class="success-card"><div style="font-size:14px;font-weight:600;color:#27500A;">${c.name}</div><div style="font-size:11px;color:#97C459;margin-top:2px;">${reviewState.drink}</div><div style="font-size:18px;color:#3B6D11;margin:5px 0;">${stars}</div>${reviewState.text?`<div style="font-size:12px;color:#639922;font-style:italic;line-height:1.5;">"${reviewState.text.slice(0,80)}${reviewState.text.length>80?'…':''}"</div>`:''}</div>
+  <button class="done-btn" onclick="document.getElementById('reviewOverlay').remove()">Back to map</button></div>`;
+}
+
+function attachReviewEvents() {
+  const ta = document.getElementById('reviewTa');
+  if (ta) {
+    ta.addEventListener('input', () => {
+      reviewState.text = ta.value;
+      const cc = document.getElementById('charCount');
+      if (cc) cc.textContent = ta.value.length+'/300';
+      const btn = document.querySelector('.next-btn');
+      if (btn) btn.disabled = ta.value.length < 10;
+    });
+  }
+}
+
+function selectCafe(id) { reviewState.cafeId=id; reviewState.drink=null; renderReview(); }
+function selectDrink(d) { reviewState.drink=d; renderReview(); }
+function setOverall(v) { reviewState.overall=v; renderReview(); }
+function setCat(k,v) { reviewState.cats[k]=v; renderReview(); }
+function toggleTag(t) { const i=reviewState.tags.indexOf(t); if(i>-1) reviewState.tags.splice(i,1); else reviewState.tags.push(t); renderReview(); }
+function reviewNext() { reviewState.step++; renderReview(); }
+function reviewBack() { if(reviewState.step>0){reviewState.step--;renderReview();}else{document.getElementById('reviewOverlay').remove();} }
+
+renderPins();
+switchSheet('nearby', document.querySelector('.sheet-tab.active'));
+</script>
+</body>
+</html>
